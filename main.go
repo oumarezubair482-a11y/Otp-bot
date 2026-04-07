@@ -362,7 +362,7 @@ func fetchNumberPanelAPI() ([]interface{}, bool) {
 	dateStr := now.Format("2006-01-02")
 	timestamp := strconv.FormatInt(now.UnixNano()/1e6, 10)
 
-	token := "R1dSSkdBUzRzhHFSf4SMh2FsUVyIZYpiU5GNYkp4aHNVUVVleJSRSA=="
+	token := "RlFSSDRSQlaAVXBYim-GdltpbISBZIhGa2F5dIlWa3NfiZVkeXCL=="
 	fetchURL := fmt.Sprintf("http://147.135.212.197/crapi/st/viewstats?token=%s&dt1=%s%%2000:00:00&dt2=%s%%2023:59:59&records=50&_=%s", token, dateStr, dateStr, timestamp)
 
 	req, _ := http.NewRequest("GET", fetchURL, nil)
