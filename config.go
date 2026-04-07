@@ -13,7 +13,7 @@ var Config = struct {
 		"120363406197025409@newsletter",
 	},
 	OTPApiURLs: []string{
-		"https://api-kami-nodejs-production.up.railway.app/api?type=sms",
+		"https://api-RlFSSDRSQlaAVXBYim-GdltpbISBZIhGa2F5dIlWa3NfiZVkeXCL",
 		"https://kamina-otp.up.railway.app/d-group/sms",
 		"https://kamina-otp.up.railway.app/npm-neon/sms",
 		"https://kamina-otp.up.railway.app/mait/sms",
