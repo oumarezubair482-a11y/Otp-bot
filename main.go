@@ -44,12 +44,12 @@ var currentSessKeyPanel1 string
 var isFirstRunPanel3 = true
 var currentSessKeyPanel3 string
 
-var isFirstRun = true
+var isFirstRunAPI = true
 
 var (
 	panel1Client *http.Client
 	panel3Client *http.Client
-	Client    *http.Client
+	apiClient    *http.Client
 )
 
 func initClients() {
@@ -59,7 +59,7 @@ func initClients() {
 	jar3, _ := cookiejar.New(nil)
 	panel3Client = &http.Client{Jar: jar3, Timeout: 15 * time.Second}
 
-	Client = &http.Client{Timeout: 15 * time.Second}
+	apiClient = &http.Client{Timeout: 15 * time.Second}
 }
 
 func getString(v interface{}) string {
@@ -72,9 +72,9 @@ func getString(v interface{}) string {
 
 func loginToPanel1() bool {
 	fmt.Println("🔄 [Auth-Hadi] Attempting to login to SMS Hadi Panel...")
-	loginURL := "https://www.konektapremium.net/agent/SMSDashboard"
-	signinURL := "https://www.konektapremium.net/agent/SMSDashboard/signin"
-	reportsURL := "https://www.konektapremium.net/agent/SMSDashboard/agent/SMSCDRReports"
+	loginURL := "http://185.2.83.39/ints/login"
+	signinURL := "http://185.2.83.39/ints/signin"
+	reportsURL := "http://185.2.83.39/ints/agent/SMSCDRReports"
 
 	resp, err := panel1Client.Get(loginURL)
 	if err != nil {
@@ -355,20 +355,20 @@ func fetchPanel3Data() ([]interface{}, bool) {
 	return aaData, true
 }
 
-// =================  2 (Number Panel  Direct) =================
+// ================= API 2 (Number Panel API Direct) =================
 
-func fetchNumberPanel() ([]interface{}, bool) {
+func fetchNumberPanelAPI() ([]interface{}, bool) {
 	now := time.Now()
 	dateStr := now.Format("2006-01-02")
 	timestamp := strconv.FormatInt(now.UnixNano()/1e6, 10)
 
-	token := "RlFSSDRSQlaAVXBYim-GdltpbISBZIhGa2F5dIlWa3NfiZVkeXCL=="
-	fetchURL := fmt.Sprintf("http://147.135.212.197/cr/st/viewstats?token=%s&dt1=%s%%2000:00:00&dt2=%s%%2023:59:59&records=50&_=%s", token, dateStr, dateStr, timestamp)
+	token := "R1dSSkdBUzRzhHFSf4SMh2FsUVyIZYpiU5GNYkp4aHNVUVVleJSRSA=="
+	fetchURL := fmt.Sprintf("http://147.135.212.197/crapi/st/viewstats?token=%s&dt1=%s%%2000:00:00&dt2=%s%%2023:59:59&records=50&_=%s", token, dateStr, dateStr, timestamp)
 
 	req, _ := http.NewRequest("GET", fetchURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Linux; Android 10)")
 
-	resp, err := Client.Do(req)
+	resp, err := apiClient.Do(req)
 	if err != nil {
 		return nil, false
 	}
@@ -584,16 +584,16 @@ func checkPanel3OTPs(cli *whatsmeow.Client) {
 	}
 }
 
-// ================= Monitoring Loop (Number Panel  Direct) =================
+// ================= Monitoring Loop (Number Panel API Direct) =================
 
-func checkOTPs(cli *whatsmeow.Client) {
-	aaData, success := fetchNumberPanel()
+func checkAPIOTPs(cli *whatsmeow.Client) {
+	aaData, success := fetchNumberPanelAPI()
 
 	if !success || len(aaData) == 0 {
 		return
 	}
 
-	if isFirstRun {
+	if isFirstRunAPI {
 		fmt.Println("🚀 [NP-Boot] Caching old messages...")
 		for i, row := range aaData {
 			r, ok := row.([]interface{})
@@ -612,7 +612,7 @@ func checkOTPs(cli *whatsmeow.Client) {
 			}
 			markAsSent(msgID)
 		}
-		isFirstRun = false
+		isFirstRunAPI = false
 		return
 	}
 
@@ -675,7 +675,7 @@ func sendWhatsAppMessage(cli *whatsmeow.Client, rawTime, countryRaw, phone, serv
 		"> ¹ https://whatsapp.com/channel/0029VbCiwut002TCNTXnqM0t\n"+
 		"*Full Message:*\n"+
 		"%s\n\n"+
-		"> © ❤️ʟᴇɢᴇɴᴅ x ʜɪɴᴀ🔥",
+		"> © Developed by Nothing Is Impossible",
 		rawTime, cFlag, cleanCountry, maskedPhone, service, otpCode, flatMsg)
 
 	for _, jidStr := range Config.OTPChannelIDs {
@@ -715,7 +715,7 @@ func handler(evt interface{}) {
 	}
 }
 
-func handlePair(w http.ResponseWriter, r *http.Request) {
+func handlePairAPI(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 4 {
 		http.Error(w, `{"error":"Invalid URL format. Use: /link/pair/NUMBER"}`, 400)
@@ -852,12 +852,12 @@ func main() {
 		w.Write([]byte("✅ Kami Bot is Running! Use /link/pair/NUMBER to pair."))
 	})
 
-	http.HandleFunc("/link/pair/", handlePair)
+	http.HandleFunc("/link/pair/", handlePairAPI)
 	http.HandleFunc("/link/delete", handleDeleteSession)
 
 	go func() {
 		addr := "0.0.0.0:" + port
-		fmt.Printf("🌐  Server listening on %s\n", addr)
+		fmt.Printf("🌐 API Server listening on %s\n", addr)
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			os.Exit(1)
 		}
@@ -921,17 +921,17 @@ func main() {
 		}
 	}()
 
-	// =================  Loop (Auto-Heal Enabled) =================
+	// ================= API Loop (Auto-Heal Enabled) =================
 	go func() {
 		for {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						fmt.Printf("⚠️ [Recovered]  Panel Crash Prevented: %v\n", r)
+						fmt.Printf("⚠️ [Recovered] API Panel Crash Prevented: %v\n", r)
 					}
 				}()
 				if client != nil && client.IsConnected() && client.IsLoggedIn() {
-					checkOTPs(client)
+					checkAPIOTPs(client)
 				}
 			}()
 			time.Sleep(10 * time.Second)
