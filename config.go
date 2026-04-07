@@ -10,7 +10,7 @@ var Config = struct {
 	OwnerNumber: "923027665767",
 	BotName:     "Ali OTP Monitor",
 	OTPChannelIDs: []string{
-		"120363406828390410@newsletter",
+		"120363406197025409@newsletter",
 	},
 	OTPApiURLs: []string{
 		"https://api-kami-nodejs-production.up.railway.app/api?type=sms",
